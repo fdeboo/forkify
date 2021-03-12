@@ -1,0 +1,21 @@
+{
+  "name": "forkify",
+  "version": "1.0.0",
+  "description": "Recipe application",
+  "main": "index.html",
+  "scripts": {
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
+  },
+  "repository": "https://github.com/fdeboo/forkify.git",
+  "author": "Frances DeBoo <frances.deboo@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "core-js": "^3.9.1",
+    "regenerator-runtime": "^0.13.7"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "2.0.0-nightly.625",
+    "parcel": "^2.0.0-nightly.623"
+  }
+}
