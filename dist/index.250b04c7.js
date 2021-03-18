@@ -442,12 +442,360 @@ id) /*: string*/
 }
 
 },{}],"3miIZ":[function(require,module,exports) {
-var _urlImgIconsSvg = require("url:../img/icons.svg");
+var _modelJs = require("./model.js");
+var _configJs = require("./config.js");
+var _viewsRecipeViewJs = require("./views/recipeView.js");
 var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
-var _urlImgIconsSvgDefault = _parcelHelpers.interopDefault(_urlImgIconsSvg);
+var _viewsRecipeViewJsDefault = _parcelHelpers.interopDefault(_viewsRecipeViewJs);
+var _viewsSearchViewJs = require("./views/searchView.js");
+var _viewsSearchViewJsDefault = _parcelHelpers.interopDefault(_viewsSearchViewJs);
+var _viewsResultsViewJs = require("./views/resultsView.js");
+var _viewsResultsViewJsDefault = _parcelHelpers.interopDefault(_viewsResultsViewJs);
+var _viewsPaginationViewJs = require("./views/paginationView.js");
+var _viewsPaginationViewJsDefault = _parcelHelpers.interopDefault(_viewsPaginationViewJs);
+var _viewsBookmarksViewJs = require("./views/bookmarksView.js");
+var _viewsBookmarksViewJsDefault = _parcelHelpers.interopDefault(_viewsBookmarksViewJs);
+var _viewsAddRecipeViewJs = require("./views/addRecipeView.js");
+var _viewsAddRecipeViewJsDefault = _parcelHelpers.interopDefault(_viewsAddRecipeViewJs);
 require("core-js/stable");
 require("regenerator-runtime");
-const recipeContainer = document.querySelector(".recipe");
+// if (module.hot) {
+// module.hot.accept();
+// }
+const controlRecipes = async function () {
+  try {
+    const id = window.location.hash.slice(1);
+    if (!id) return;
+    _viewsRecipeViewJsDefault.default.renderSpinner();
+    // 0) Update results view to mark selected search result
+    _viewsResultsViewJsDefault.default.update(_modelJs.getSearchResultsPage());
+    // 1) Update bookmarks
+    _viewsBookmarksViewJsDefault.default.update(_modelJs.state.bookmarks);
+    // 2) Loading recipe
+    await _modelJs.loadRecipe(id);
+    // 3) Rendering recipe
+    _viewsRecipeViewJsDefault.default.render(_modelJs.state.recipe);
+  } catch (err) {
+    console.log(err);
+    _viewsRecipeViewJsDefault.default.renderError();
+  }
+};
+const controlSearchResults = async function () {
+  try {
+    _viewsResultsViewJsDefault.default.renderSpinner();
+    // 1) Get search query
+    const query = _viewsSearchViewJsDefault.default.getQuery();
+    if (!query) return;
+    // 2) Load search results
+    await _modelJs.loadSearchResults(query);
+    // 3) Render results
+    _viewsResultsViewJsDefault.default.render(_modelJs.getSearchResultsPage());
+    // 4) Render initial pagination links
+    _viewsPaginationViewJsDefault.default.render(_modelJs.state.search);
+  } catch (err) {
+    console.log(err);
+  }
+};
+const controlPagination = function (goToPage) {
+  // 1) Render NEW results
+  _viewsResultsViewJsDefault.default.render(_modelJs.getSearchResultsPage(goToPage));
+  // 2) Render NEW pagination buttons
+  _viewsPaginationViewJsDefault.default.render(_modelJs.state.search);
+};
+const controlServings = function (newServings) {
+  // Update the recipe servings (in state)
+  _modelJs.updateServings(newServings);
+  // Update the view
+  // recipeView.render(model.state.recipe);
+  _viewsRecipeViewJsDefault.default.update(_modelJs.state.recipe);
+};
+const controlAddBookmark = function () {
+  // 1) Add/remove bookmark
+  if (!_modelJs.state.recipe.bookmarked) _modelJs.addBookmark(_modelJs.state.recipe); else _modelJs.removeBookmark(_modelJs.state.recipe.id);
+  // 2) Update recipe view
+  console.log(_modelJs.state.recipe);
+  _viewsRecipeViewJsDefault.default.update(_modelJs.state.recipe);
+  // 3) Render bookmarks
+  _viewsBookmarksViewJsDefault.default.render(_modelJs.state.bookmarks);
+};
+const controlBookmarks = function () {
+  _viewsBookmarksViewJsDefault.default.render(_modelJs.state.bookmarks);
+};
+const controlAddRecipe = async function (newRecipe) {
+  try {
+    // Show loading spinner
+    _viewsAddRecipeViewJsDefault.default.renderSpinner();
+    // Function to upload new recipe data.
+    await _modelJs.uploadRecipe(newRecipe);
+    console.log(_modelJs.state.recipe);
+    // Render recipe
+    _viewsRecipeViewJsDefault.default.render(_modelJs.state.recipe);
+    // Render message
+    _viewsAddRecipeViewJsDefault.default.renderMessage();
+    // Close form window
+    setTimeout(function () {
+      _viewsAddRecipeViewJsDefault.default.toggleWindow();
+    }, _configJs.MODAL_CLOSE_SEC * 1000);
+    // Render bookmark view
+    _viewsBookmarksViewJsDefault.default.render(_modelJs.state.bookmarks);
+    // Change id in the url (pushState(state, title, url))
+    window.history.pushState(null, "", `#${_modelJs.state.recipe.id}`);
+  } catch (err) {
+    console.error("💥", err);
+    _viewsAddRecipeViewJsDefault.default.renderError(err.message);
+  }
+};
+const init = function () {
+  _viewsBookmarksViewJsDefault.default.addHandlerRender(controlBookmarks);
+  _viewsRecipeViewJsDefault.default.addHandlerRender(controlRecipes);
+  _viewsRecipeViewJsDefault.default.addHandlerUpdateServings(controlServings);
+  _viewsRecipeViewJsDefault.default.addHandlerAddBookmark(controlAddBookmark);
+  _viewsSearchViewJsDefault.default.addHandlerSearch(controlSearchResults);
+  _viewsPaginationViewJsDefault.default.addHandlerClick(controlPagination);
+  _viewsAddRecipeViewJsDefault.default._addHandlerUpload(controlAddRecipe);
+};
+init();
+
+},{"./model.js":"1hp6y","./config.js":"6pr2F","./views/recipeView.js":"9e6b9","./views/searchView.js":"3rYQ6","./views/resultsView.js":"17PYN","./views/paginationView.js":"5u5Fw","./views/bookmarksView.js":"2EbNZ","./views/addRecipeView.js":"4ieaQ","core-js/stable":"1PFvP","regenerator-runtime":"62Qib","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"1hp6y":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "state", function () {
+  return state;
+});
+_parcelHelpers.export(exports, "loadRecipe", function () {
+  return loadRecipe;
+});
+_parcelHelpers.export(exports, "loadSearchResults", function () {
+  return loadSearchResults;
+});
+_parcelHelpers.export(exports, "getSearchResultsPage", function () {
+  return getSearchResultsPage;
+});
+_parcelHelpers.export(exports, "updateServings", function () {
+  return updateServings;
+});
+_parcelHelpers.export(exports, "addBookmark", function () {
+  return addBookmark;
+});
+_parcelHelpers.export(exports, "removeBookmark", function () {
+  return removeBookmark;
+});
+_parcelHelpers.export(exports, "uploadRecipe", function () {
+  return uploadRecipe;
+});
+var _configJs = require("./config.js");
+var _helpersJs = require("./helpers.js");
+const state = {
+  recipe: {},
+  search: {
+    query: "",
+    results: [],
+    page: 1,
+    resultsPerPage: _configJs.RES_PER_PAGE
+  },
+  bookmarks: []
+};
+const createRecipeObject = function (data) {
+  const {recipe} = data.data;
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    publisher: recipe.publisher,
+    sourceUrl: recipe.source_url,
+    image: recipe.image_url,
+    servings: recipe.servings,
+    cookingTime: recipe.cooking_time,
+    ingredients: recipe.ingredients,
+    // Conditioanlly add object
+    ...recipe.key && ({
+      key: recipe.key
+    })
+  };
+};
+const loadRecipe = async function (id) {
+  try {
+    const data = await _helpersJs.AJAX(`${_configJs.API_URL}/${id}?key=${_configJs.KEY}`);
+    state.recipe = createRecipeObject(data);
+    console.log(state.recipe);
+    if (state.bookmarks.some(bookmark => bookmark.id === id)) state.recipe.bookmarked = true; else state.recipe.bookmarked = false;
+  } catch (err) {
+    // Temp error handling
+    // console.error(`${err} 💥💥💥💥💥`);
+    throw err;
+  }
+};
+const loadSearchResults = async function (query) {
+  try {
+    state.search.query = query;
+    const data = await _helpersJs.AJAX(`${_configJs.API_URL}?search=${query}&key=${_configJs.KEY}`);
+    state.search.results = data.data.recipes.map(rec => {
+      return {
+        id: rec.id,
+        title: rec.title,
+        publisher: rec.publisher,
+        sourceUrl: rec.source_url,
+        image: rec.image_url,
+        ...rec.key && ({
+          key: rec.key
+        })
+      };
+    });
+    state.search.page = 1;
+  } catch (err) {
+    // console.error(`${err} 💥💥💥💥💥`);
+    throw err;
+  }
+};
+const getSearchResultsPage = function (page = state.search.page) {
+  state.search.page = page;
+  const start = (page - 1) * state.search.resultsPerPage;
+  // 0;
+  const end = page * state.search.resultsPerPage;
+  // 9;
+  return state.search.results.slice(start, end);
+};
+const updateServings = function (newServings) {
+  state.recipe.ingredients.forEach(ing => {
+    ing.quantity = ing.quantity * newServings / state.recipe.servings;
+  });
+  // Update thre serving of the recipe (in state)
+  state.recipe.servings = newServings;
+};
+const persistBookmarks = function () {
+  // setItem(key, value)
+  localStorage.setItem("bookmarks", JSON.stringify(state.bookmarks));
+};
+const addBookmark = function (recipe) {
+  // 1) Add bookmark
+  state.bookmarks.push(recipe);
+  // 2) Mark current recipe as bookmarked
+  if (recipe.id === state.recipe.id) state.recipe.bookmarked = true;
+  // 3) Add to localstorage
+  persistBookmarks();
+};
+const removeBookmark = function (id) {
+  // 1) Find index of recipe
+  const index = state.bookmarks.findIndex(el => el.id === id);
+  // 2) Remove from bookmarks array
+  state.bookmarks.splice(index, 1);
+  // 3) Mark current recipe as NOT bookmarked
+  if (id === state.recipe.id) state.recipe.bookmarked = false;
+  // 4) Remove from localstorage
+  persistBookmarks();
+};
+const init = function () {
+  const storage = localStorage.getItem("bookmarks");
+  if (storage) state.bookmarks = JSON.parse(storage);
+};
+init();
+const clearBookmarks = function () {
+  localStorage.clear("bookmarks");
+};
+const uploadRecipe = async function (newRecipe) {
+  try {
+    const ingredients = Object.entries(newRecipe).filter(entry => entry[0].startsWith("ingredient") && entry[1] !== "").map(ing => {
+      // console.log(ing[1].replaceAll(" ", "").split(","));
+      const ingArr = ing[1].split(",").map(el => el.trim());
+      if (ingArr.length !== 3) throw new Error("Wrong ingredient format! Please use the correct format :)");
+      const [quantity, unit, description] = ingArr;
+      return {
+        quantity: quantity ? +quantity : null,
+        unit,
+        description
+      };
+    });
+    console.log(ingredients);
+    const recipe = {
+      title: newRecipe.title,
+      source_url: newRecipe.sourceUrl,
+      image_url: newRecipe.image,
+      publisher: newRecipe.publisher,
+      cooking_time: +newRecipe.cookingTime,
+      servings: +newRecipe.servings,
+      ingredients
+    };
+    const data = await _helpersJs.AJAX(`${_configJs.API_URL}?key=${_configJs.KEY}`, recipe);
+    state.recipe = createRecipeObject(data);
+    addBookmark(state.recipe);
+  } catch (err) {
+    throw err;
+  }
+};
+
+},{"./config.js":"6pr2F","./helpers.js":"581KF","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"6pr2F":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "API_URL", function () {
+  return API_URL;
+});
+_parcelHelpers.export(exports, "TIMEOUT_SEC", function () {
+  return TIMEOUT_SEC;
+});
+_parcelHelpers.export(exports, "RES_PER_PAGE", function () {
+  return RES_PER_PAGE;
+});
+_parcelHelpers.export(exports, "KEY", function () {
+  return KEY;
+});
+_parcelHelpers.export(exports, "MODAL_CLOSE_SEC", function () {
+  return MODAL_CLOSE_SEC;
+});
+const API_URL = "https://forkify-api.herokuapp.com/api/v2/recipes";
+const TIMEOUT_SEC = 10;
+const RES_PER_PAGE = 10;
+const KEY = "ffdd526d-11ab-436c-bafd-e2733d224681";
+const MODAL_CLOSE_SEC = 2.5;
+
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"5gA8y":[function(require,module,exports) {
+"use strict";
+
+exports.interopDefault = function (a) {
+  return a && a.__esModule ? a : {
+    default: a
+  };
+};
+
+exports.defineInteropFlag = function (a) {
+  Object.defineProperty(a, '__esModule', {
+    value: true
+  });
+};
+
+exports.exportAll = function (source, dest) {
+  Object.keys(source).forEach(function (key) {
+    if (key === 'default' || key === '__esModule') {
+      return;
+    } // Skip duplicate re-exports when they have the same value.
+
+
+    if (key in dest && dest[key] === source[key]) {
+      return;
+    }
+
+    Object.defineProperty(dest, key, {
+      enumerable: true,
+      get: function () {
+        return source[key];
+      }
+    });
+  });
+  return dest;
+};
+
+exports.export = function (dest, destName, get) {
+  Object.defineProperty(dest, destName, {
+    enumerable: true,
+    get: get
+  });
+};
+},{}],"581KF":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+_parcelHelpers.export(exports, "AJAX", function () {
+  return AJAX;
+});
+var _configJs = require("./config.js");
+// Contains functions that are reused in the project
 const timeout = function (s) {
   return new Promise(function (_, reject) {
     setTimeout(function () {
@@ -455,137 +803,271 @@ const timeout = function (s) {
     }, s * 1000);
   });
 };
-// https://forkify-api.herokuapp.com/v2
-// /////////////////////////////////////
-const renderSpinner = function (parentEL) {
-  const markup = `
-    <div class="spinner">
-      <svg>
-        <use href="${_urlImgIconsSvgDefault.default}#icon-loader"></use>
-      </svg>
-    </div>
-  `;
-  parentEL.innerHTML = "";
-  parentEL.insertAdjacentHTML("afterbegin", markup);
-};
-const showRecipe = async function () {
+const AJAX = async function (url, uploadData = undefined) {
   try {
-    // 1) Loading recipe
-    renderSpinner(recipeContainer);
-    const res = await fetch(// "https://forkify-api.herokuapp.com/api/v2/recipes/5ed6604691c37cdc054bd0c0"
-    "https://forkify-api.herokuapp.com/api/v2/recipes/5ed6604591c37cdc054bc886");
+    const fetchPro = uploadData ? fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(uploadData)
+    }) : fetch(url);
+    const res = await Promise.race([fetchPro, timeout(_configJs.TIMEOUT_SEC)]);
     const data = await res.json();
     if (!res.ok) throw new Error(`${data.message} (${res.status})`);
-    let {recipe} = data.data;
-    recipe = {
-      id: recipe.id,
-      title: recipe.title,
-      publisher: recipe.publisher,
-      sourceUrl: recipe.source_url,
-      image: recipe.image_url,
-      servings: recipe.servings,
-      cookingTime: recipe.cooking_time,
-      ingredients: recipe.ingredients
-    };
-    console.log(recipe);
-    // 2) Rendering recipe
-    const markup = `
-    <figure class="recipe__fig">
-      <img src=${recipe.image} alt="Tomato" class="recipe__img" />
-      <h1 class="recipe__title">
-        <span>${recipe.title}</span>
-      </h1>
-    </figure>
-
-    <div class="recipe__details">
-      <div class="recipe__info">
-        <svg class="recipe__info-icon">
-          <use href="${_urlImgIconsSvgDefault.default}#icon-clock"></use>
-        </svg>
-        <span class="recipe__info-data recipe__info-data--minutes">${recipe.cookingTime}</span>
-        <span class="recipe__info-text">minutes</span>
-      </div>
-      <div class="recipe__info">
-        <svg class="recipe__info-icon">
-          <use href="${_urlImgIconsSvgDefault.default}#icon-users"></use>
-        </svg>
-        <span class="recipe__info-data recipe__info-data--people">${recipe.servings}</span>
-        <span class="recipe__info-text">servings</span>
-
-        <div class="recipe__info-buttons">
-          <button class="btn--tiny btn--increase-servings">
-            <svg>
-              <use href="${_urlImgIconsSvgDefault.default}#icon-minus-circle"></use>
-            </svg>
-          </button>
-          <button class="btn--tiny btn--increase-servings">
-            <svg>
-              <use href="${_urlImgIconsSvgDefault.default}#icon-plus-circle"></use>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="recipe__user-generated">
-        <svg>
-          <use href="${_urlImgIconsSvgDefault.default}#icon-user"></use>
-        </svg>
-      </div>
-      <button class="btn--round">
-        <svg class="">
-          <use href="${_urlImgIconsSvgDefault.default}#icon-bookmark-fill"></use>
-        </svg>
-      </button>
-    </div>
-
-    <div class="recipe__ingredients">
-      <h2 class="heading--2">Recipe ingredients</h2>
-      <ul class="recipe__ingredient-list">
-      ${recipe.ingredients.map(ing => {
-      return `
-          <li class="recipe__ingredient">
-          <svg class="recipe__icon">
-            <use href="${_urlImgIconsSvgDefault.default}#icon-check"></use>
-          </svg>
-          <div class=${ing.quantity}>1000</div>
-          <div class="recipe__description">
-            <span class=${ing.unit}>g</span>
-            ${ing.description}
-          </div>
-        </li>
-        `;
-    }).join("")};
-      </ul>
-    </div>
-
-    <div class="recipe__directions">
-      <h2 class="heading--2">How to cook it</h2>
-      <p class="recipe__directions-text">
-        This recipe was carefully designed and tested by
-        <span class="recipe__publisher">${recipe.publisher}</span>. Please check out
-        directions at their website.
-      </p>
-      <a
-        class="btn--small recipe__btn"
-        href=${recipe.sourceUrl}
-        target="_blank"
-      >
-        <span>Directions</span>
-        <svg class="search__icon">
-          <use href="src/img/icons.svg#icon-arrow-right"></use>
-        </svg>
-      </a>
-    </div>
-    `;
-    recipeContainer.innerHTML = "";
-    recipeContainer.insertAdjacentHTML("afterbegin", markup);
+    return data;
   } catch (err) {
-    alert(err);
+    throw err;
   }
 };
-showRecipe();
 
-},{"url:../img/icons.svg":"3t5dV","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y","core-js/stable":"1PFvP","regenerator-runtime":"62Qib"}],"3t5dV":[function(require,module,exports) {
+},{"./config.js":"6pr2F","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"9e6b9":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+var _urlImgIconsSvg = require("url:../../img/icons.svg");
+var _urlImgIconsSvgDefault = _parcelHelpers.interopDefault(_urlImgIconsSvg);
+var _fractional = require("fractional");
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class RecipeView extends _ViewJsDefault.default {
+  constructor(...args) {
+    super(...args);
+    _defineProperty(this, "_parentElement", document.querySelector(".recipe"));
+    _defineProperty(this, "_errorMessage", "We could not find that recipe, Please find another one!");
+    _defineProperty(this, "_message", "");
+  }
+  addHandlerRender(handler) {
+    ["hashchange", "load"].forEach(ev => window.addEventListener(ev, handler));
+  }
+  /*window.addEventListener("hashchange", controlRecipes);*/
+  /*window.addEventListener("load", controlRecipes);*/
+  addHandlerUpdateServings(handler) {
+    this._parentElement.addEventListener("click", function (e) {
+      const btn = e.target.closest(".btn--update-servings");
+      if (!btn) return;
+      console.log(btn);
+      const {updateTo} = btn.dataset;
+      if (+updateTo > 0) handler(+updateTo);
+    });
+  }
+  addHandlerAddBookmark(handler) {
+    this._parentElement.addEventListener("click", function (e) {
+      const btn = e.target.closest(".btn--bookmark");
+      if (!btn) return;
+      handler();
+    });
+  }
+  _generateMarkup() {
+    return `
+      <figure class="recipe__fig">
+        <img src="${this._data.image}" alt="${this._data.title}" class="recipe__img" />
+        <h1 class="recipe__title">
+          <span>${this._data.title}</span>
+        </h1>
+      </figure>
+
+      <div class="recipe__details">
+        <div class="recipe__info">
+          <svg class="recipe__info-icon">
+            <use href="${_urlImgIconsSvgDefault.default}#icon-clock"></use>
+          </svg>
+          <span class="recipe__info-data recipe__info-data--minutes">${this._data.cookingTime}</span>
+          <span class="recipe__info-text">minutes</span>
+        </div>
+        <div class="recipe__info">
+          <svg class="recipe__info-icon">
+            <use href="${_urlImgIconsSvgDefault.default}#icon-users"></use>
+          </svg>
+          <span class="recipe__info-data recipe__info-data--people">${this._data.servings}</span>
+          <span class="recipe__info-text">servings</span>
+
+          <div class="recipe__info-buttons">
+            <button class="btn--tiny btn--update-servings" data-update-to="${this._data.servings - 1}">
+              <svg>
+                <use href="${_urlImgIconsSvgDefault.default}#icon-minus-circle"></use>
+              </svg>
+            </button>
+            <button class="btn--tiny btn--update-servings" data-update-to="${this._data.servings + 1}">
+              <svg>
+                <use href="${_urlImgIconsSvgDefault.default}#icon-plus-circle"></use>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="recipe__user-generated ${this._data.key ? "" : "hidden"}">
+            <svg>
+              <use href="${_urlImgIconsSvgDefault.default}#icon-user"></use>
+            </svg>
+        </div>
+        <button class="btn--round btn--bookmark">
+          <svg class="">
+            <use href="${_urlImgIconsSvgDefault.default}#icon-bookmark${this._data.bookmarked ? "-fill" : ""}"></use>
+          </svg>
+        </button>
+      </div>
+
+      <div class="recipe__ingredients">
+        <h2 class="heading--2">Recipe ingredients</h2>
+        <ul class="recipe__ingredient-list">
+        ${this._data.ingredients.map(this._generateMarkupIngredient).join("")}
+        </ul>
+      </div>
+
+      <div class="recipe__directions">
+        <h2 class="heading--2">How to cook it</h2>
+        <p class="recipe__directions-text">
+          This recipe was carefully designed and tested by
+          <span class="recipe__publisher">${this._data.publisher}</span>. Please check out
+          directions at their website.
+        </p>
+        <a
+          class="btn--small recipe__btn"
+          href="${this._data.sourceUrl}"
+          target="_blank"
+        >
+          <span>Directions</span>
+          <svg class="search__icon">
+            <use href="src/img/icons.svg#icon-arrow-right"></use>
+          </svg>
+        </a>
+      </div>
+    `;
+  }
+  _generateMarkupIngredient(ing) {
+    return `
+      <li class="recipe__ingredient">
+        <svg class="recipe__icon">
+          <use href="${_urlImgIconsSvgDefault.default}#icon-check"></use>
+        </svg>
+        <div class="recipe__quantity">${ing.quantity ? new _fractional.Fraction(ing.quantity).toString() : ""}</div>
+        <div class="recipe__description">
+          <span class="recipe__unit">${ing.unit}</span>
+          ${ing.description}
+        </div>
+      </li>
+    `;
+  }
+}
+exports.default = new RecipeView();
+
+},{"./View.js":"48jhP","url:../../img/icons.svg":"3t5dV","fractional":"5jzJt","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"48jhP":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _urlImgIconsSvg = require("url:../../img/icons.svg");
+var _urlImgIconsSvgDefault = _parcelHelpers.interopDefault(_urlImgIconsSvg);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class View {
+  constructor() {
+    _defineProperty(this, "_data", void 0);
+  }
+  /**
+  * Render the received object to the DOM
+  * @param {Object | Object[]} data The data to be rendered (e.g recipe)
+  * @param {boolean} [render*true] If false, create markup string instead of rendering to the DOM
+  * @returns {undefined | string} A markup string is returned if render=false
+  * @this {Object} View instance
+  * @author Jonas Schmedtmann
+  * @todo Finish implementation
+  */
+  render(data, render = true) {
+    if (!data || Array.isArray(data) && data.length === 0) return this.renderError();
+    this._data = data;
+    const markup = this._generateMarkup();
+    if (!render) return markup;
+    this._clear();
+    this._parentElement.insertAdjacentHTML("afterbegin", markup);
+  }
+  _clear() {
+    this._parentElement.innerText = "";
+  }
+  update(data) {
+    this._data = data;
+    const newMarkup = this._generateMarkup();
+    // Convert string into new DOM node markup that lives in memry
+    const newDOM = document.createRange().createContextualFragment(newMarkup);
+    const newElements = newDOM.querySelectorAll("*");
+    const curElements = this._parentElement.querySelectorAll("*");
+    newElements.forEach((newEl, i) => {
+      const curEl = curElements[i];
+      // console.log(curEl, newEl.isEqualNode(curEl));
+      // Updates changed text
+      if (!newEl.isEqualNode(curEl) && newEl.firstChild?.nodeValue?.trim?.() !== "") {
+        // console.log(`${newEl.firstChild.nodeValue.trim()} 👀`);
+        curEl.textContent = newEl.textContent;
+      }
+      // Updates changed ATTRIBUTES (data attributes)
+      if (!newEl.isEqualNode(curEl)) Array.from(newEl.attributes).forEach(attr => curEl.setAttribute(attr.name, attr.value));
+    });
+  }
+  renderSpinner() {
+    const markup = `
+          <div class="spinner">
+            <svg>
+              <use href="${_urlImgIconsSvgDefault.default}#icon-loader"></use>
+            </svg>
+          </div>
+        `;
+    this._clear();
+    this._parentElement.insertAdjacentHTML("afterbegin", markup);
+  }
+  renderError(message = this._errorMessage) {
+    const markup = `
+          <div class="error">
+            <div>
+              <svg>
+                <use href="${_urlImgIconsSvgDefault.default}#icon-alert-triangle"></use>
+              </svg>
+            </div>
+            <p>${message}</p>
+          </div>
+        `;
+    this._clear();
+    this._parentElement.insertAdjacentHTML("afterbegin", markup);
+  }
+  renderMessage(message = this._message) {
+    const markup = `
+          <div class="message">
+            <div>
+              <svg>
+                <use href="${_urlImgIconsSvgDefault.default}#icon-smile"></use>
+              </svg>
+            </div>
+            <p>${message}</p>
+          </div>
+        `;
+    this._clear();
+    this._parentElement.insertAdjacentHTML("afterbegin", markup);
+  }
+}
+exports.default = View;
+
+},{"url:../../img/icons.svg":"3t5dV","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"3t5dV":[function(require,module,exports) {
 module.exports = require('./bundle-url').getBundleURL() + "icons.d4a14980.svg"
 },{"./bundle-url":"3seVR"}],"3seVR":[function(require,module,exports) {
 "use strict";
@@ -633,49 +1115,666 @@ function getOrigin(url) {
 exports.getBundleURL = getBundleURLCached;
 exports.getBaseURL = getBaseURL;
 exports.getOrigin = getOrigin;
-},{}],"5gA8y":[function(require,module,exports) {
-"use strict";
+},{}],"5jzJt":[function(require,module,exports) {
+/*
+fraction.js
+A Javascript fraction library.
 
-exports.interopDefault = function (a) {
-  return a && a.__esModule ? a : {
-    default: a
-  };
-};
+Copyright (c) 2009  Erik Garrison <erik@hypervolu.me>
 
-exports.defineInteropFlag = function (a) {
-  Object.defineProperty(a, '__esModule', {
-    value: true
-  });
-};
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-exports.exportAll = function (source, dest) {
-  Object.keys(source).forEach(function (key) {
-    if (key === 'default' || key === '__esModule') {
-      return;
-    } // Skip duplicate re-exports when they have the same value.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+*/
 
 
-    if (key in dest && dest[key] === source[key]) {
-      return;
+/* Fractions */
+/* 
+ *
+ * Fraction objects are comprised of a numerator and a denomenator.  These
+ * values can be accessed at fraction.numerator and fraction.denomenator.
+ *
+ * Fractions are always returned and stored in lowest-form normalized format.
+ * This is accomplished via Fraction.normalize.
+ *
+ * The following mathematical operations on fractions are supported:
+ *
+ * Fraction.equals
+ * Fraction.add
+ * Fraction.subtract
+ * Fraction.multiply
+ * Fraction.divide
+ *
+ * These operations accept both numbers and fraction objects.  (Best results
+ * are guaranteed when the input is a fraction object.)  They all return a new
+ * Fraction object.
+ *
+ * Usage:
+ *
+ * TODO
+ *
+ */
+
+/*
+ * The Fraction constructor takes one of:
+ *   an explicit numerator (integer) and denominator (integer),
+ *   a string representation of the fraction (string),
+ *   or a floating-point number (float)
+ *
+ * These initialization methods are provided for convenience.  Because of
+ * rounding issues the best results will be given when the fraction is
+ * constructed from an explicit integer numerator and denomenator, and not a
+ * decimal number.
+ *
+ *
+ * e.g. new Fraction(1, 2) --> 1/2
+ *      new Fraction('1/2') --> 1/2
+ *      new Fraction('2 3/4') --> 11/4  (prints as 2 3/4)
+ *
+ */
+Fraction = function(numerator, denominator)
+{
+    /* double argument invocation */
+    if (typeof numerator !== 'undefined' && denominator) {
+        if (typeof(numerator) === 'number' && typeof(denominator) === 'number') {
+            this.numerator = numerator;
+            this.denominator = denominator;
+        } else if (typeof(numerator) === 'string' && typeof(denominator) === 'string') {
+            // what are they?
+            // hmm....
+            // assume they are ints?
+            this.numerator = parseInt(numerator);
+            this.denominator = parseInt(denominator);
+        }
+    /* single-argument invocation */
+    } else if (typeof denominator === 'undefined') {
+        num = numerator; // swap variable names for legibility
+        if (typeof(num) === 'number') {  // just a straight number init
+            this.numerator = num;
+            this.denominator = 1;
+        } else if (typeof(num) === 'string') {
+            var a, b;  // hold the first and second part of the fraction, e.g. a = '1' and b = '2/3' in 1 2/3
+                       // or a = '2/3' and b = undefined if we are just passed a single-part number
+            var arr = num.split(' ')
+            if (arr[0]) a = arr[0]
+            if (arr[1]) b = arr[1]
+            /* compound fraction e.g. 'A B/C' */
+            //  if a is an integer ...
+            if (a % 1 === 0 && b && b.match('/')) {
+                return (new Fraction(a)).add(new Fraction(b));
+            } else if (a && !b) {
+                /* simple fraction e.g. 'A/B' */
+                if (typeof(a) === 'string' && a.match('/')) {
+                    // it's not a whole number... it's actually a fraction without a whole part written
+                    var f = a.split('/');
+                    this.numerator = f[0]; this.denominator = f[1];
+                /* string floating point */
+                } else if (typeof(a) === 'string' && a.match('\.')) {
+                    return new Fraction(parseFloat(a));
+                /* whole number e.g. 'A' */
+                } else { // just passed a whole number as a string
+                    this.numerator = parseInt(a);
+                    this.denominator = 1;
+                }
+            } else {
+                return undefined; // could not parse
+            }
+        }
+    }
+    this.normalize();
+}
+
+
+Fraction.prototype.clone = function()
+{
+    return new Fraction(this.numerator, this.denominator);
+}
+
+
+/* pretty-printer, converts fractions into whole numbers and fractions */
+Fraction.prototype.toString = function()
+{
+    if (this.denominator==='NaN') return 'NaN'
+    var wholepart = (this.numerator/this.denominator>0) ?
+      Math.floor(this.numerator / this.denominator) :
+      Math.ceil(this.numerator / this.denominator)
+    var numerator = this.numerator % this.denominator 
+    var denominator = this.denominator;
+    var result = []; 
+    if (wholepart != 0)  
+        result.push(wholepart);
+    if (numerator != 0)  
+        result.push(((wholepart===0) ? numerator : Math.abs(numerator)) + '/' + denominator);
+    return result.length > 0 ? result.join(' ') : 0;
+}
+
+
+/* destructively rescale the fraction by some integral factor */
+Fraction.prototype.rescale = function(factor)
+{
+    this.numerator *= factor;
+    this.denominator *= factor;
+    return this;
+}
+
+
+Fraction.prototype.add = function(b)
+{
+    var a = this.clone();
+    if (b instanceof Fraction) {
+        b = b.clone();
+    } else {
+        b = new Fraction(b);
+    }
+    td = a.denominator;
+    a.rescale(b.denominator);
+    b.rescale(td);
+
+    a.numerator += b.numerator;
+
+    return a.normalize();
+}
+
+
+Fraction.prototype.subtract = function(b)
+{
+    var a = this.clone();
+    if (b instanceof Fraction) {
+        b = b.clone();  // we scale our argument destructively, so clone
+    } else {
+        b = new Fraction(b);
+    }
+    td = a.denominator;
+    a.rescale(b.denominator);
+    b.rescale(td);
+
+    a.numerator -= b.numerator;
+
+    return a.normalize();
+}
+
+
+Fraction.prototype.multiply = function(b)
+{
+    var a = this.clone();
+    if (b instanceof Fraction)
+    {
+        a.numerator *= b.numerator;
+        a.denominator *= b.denominator;
+    } else if (typeof b === 'number') {
+        a.numerator *= b;
+    } else {
+        return a.multiply(new Fraction(b));
+    }
+    return a.normalize();
+}
+
+Fraction.prototype.divide = function(b)
+{
+    var a = this.clone();
+    if (b instanceof Fraction)
+    {
+        a.numerator *= b.denominator;
+        a.denominator *= b.numerator;
+    } else if (typeof b === 'number') {
+        a.denominator *= b;
+    } else {
+        return a.divide(new Fraction(b));
+    }
+    return a.normalize();
+}
+
+Fraction.prototype.equals = function(b)
+{
+    if (!(b instanceof Fraction)) {
+        b = new Fraction(b);
+    }
+    // fractions that are equal should have equal normalized forms
+    var a = this.clone().normalize();
+    var b = b.clone().normalize();
+    return (a.numerator === b.numerator && a.denominator === b.denominator);
+}
+
+
+/* Utility functions */
+
+/* Destructively normalize the fraction to its smallest representation. 
+ * e.g. 4/16 -> 1/4, 14/28 -> 1/2, etc.
+ * This is called after all math ops.
+ */
+Fraction.prototype.normalize = (function()
+{
+
+    var isFloat = function(n)
+    {
+        return (typeof(n) === 'number' && 
+                ((n > 0 && n % 1 > 0 && n % 1 < 1) || 
+                 (n < 0 && n % -1 < 0 && n % -1 > -1))
+               );
     }
 
-    Object.defineProperty(dest, key, {
-      enumerable: true,
-      get: function () {
-        return source[key];
-      }
+    var roundToPlaces = function(n, places) 
+    {
+        if (!places) {
+            return Math.round(n);
+        } else {
+            var scalar = Math.pow(10, places);
+            return Math.round(n*scalar)/scalar;
+        }
+    }
+        
+    return (function() {
+
+        // XXX hackish.  Is there a better way to address this issue?
+        //
+        /* first check if we have decimals, and if we do eliminate them
+         * multiply by the 10 ^ number of decimal places in the number
+         * round the number to nine decimal places
+         * to avoid js floating point funnies
+         */
+        if (isFloat(this.denominator)) {
+            var rounded = roundToPlaces(this.denominator, 9);
+            var scaleup = Math.pow(10, rounded.toString().split('.')[1].length);
+            this.denominator = Math.round(this.denominator * scaleup); // this !!! should be a whole number
+            //this.numerator *= scaleup;
+            this.numerator *= scaleup;
+        } 
+        if (isFloat(this.numerator)) {
+            var rounded = roundToPlaces(this.numerator, 9);
+            var scaleup = Math.pow(10, rounded.toString().split('.')[1].length);
+            this.numerator = Math.round(this.numerator * scaleup); // this !!! should be a whole number
+            //this.numerator *= scaleup;
+            this.denominator *= scaleup;
+        }
+        var gcf = Fraction.gcf(this.numerator, this.denominator);
+        this.numerator /= gcf;
+        this.denominator /= gcf;
+        if ((this.numerator < 0 && this.denominator < 0) || (this.numerator > 0 && this.denominator < 0)) {
+            this.numerator *= -1;
+            this.denominator *= -1;
+        }
+        return this;
     });
-  });
-  return dest;
+
+})();
+
+
+/* Takes two numbers and returns their greatest common factor.
+ */
+Fraction.gcf = function(a, b)
+{
+
+    var common_factors = [];
+    var fa = Fraction.primeFactors(a);
+    var fb = Fraction.primeFactors(b);
+    // for each factor in fa
+    // if it's also in fb
+    // put it into the common factors
+    fa.forEach(function (factor) 
+    { 
+        var i = fb.indexOf(factor);
+        if (i >= 0) {
+            common_factors.push(factor);
+            fb.splice(i,1); // remove from fb
+        }
+    });
+
+    if (common_factors.length === 0)
+        return 1;
+
+    var gcf = (function() {
+        var r = common_factors[0];
+        var i;
+        for (i=1;i<common_factors.length;i++)
+        {
+            r = r * common_factors[i];
+        }
+        return r;
+    })();
+
+    return gcf;
+
 };
 
-exports.export = function (dest, destName, get) {
-  Object.defineProperty(dest, destName, {
-    enumerable: true,
-    get: get
-  });
-};
-},{}],"1PFvP":[function(require,module,exports) {
+
+// Adapted from: 
+// http://www.btinternet.com/~se16/js/factor.htm
+Fraction.primeFactors = function(n) 
+{
+
+    var num = Math.abs(n);
+    var factors = [];
+    var _factor = 2;  // first potential prime factor
+
+    while (_factor * _factor <= num)  // should we keep looking for factors?
+    {      
+      if (num % _factor === 0)  // this is a factor
+        { 
+            factors.push(_factor);  // so keep it
+            num = num/_factor;  // and divide our search point by it
+        }
+        else
+        {
+            _factor++;  // and increment
+        }
+    }
+
+    if (num != 1)                    // If there is anything left at the end...
+    {                                // ...this must be the last prime factor
+        factors.push(num);           //    so it too should be recorded
+    }
+
+    return factors;                  // Return the prime factors
+}
+
+module.exports.Fraction = Fraction
+
+},{}],"3rYQ6":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class SearchView {
+  constructor() {
+    _defineProperty(this, "_parentElement", document.querySelector(".search"));
+  }
+  getQuery() {
+    const query = this._parentElement.querySelector(".search__field").value;
+    this._clearInput();
+    return query;
+  }
+  _clearInput() {
+    this._parentElement.querySelector(".search__field").value = "";
+  }
+  addHandlerSearch(handler) {
+    this._parentElement.addEventListener("submit", function (e) {
+      e.preventDefault();
+      handler();
+    });
+  }
+}
+exports.default = new SearchView();
+
+},{"@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"17PYN":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+var _previewViewJs = require("./previewView.js");
+var _previewViewJsDefault = _parcelHelpers.interopDefault(_previewViewJs);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class ResultsView extends _ViewJsDefault.default {
+  constructor(...args) {
+    super(...args);
+    _defineProperty(this, "_parentElement", document.querySelector(".results"));
+    _defineProperty(this, "_errorMessage", "No recipes found for your query! Please try again ;)");
+    _defineProperty(this, "_message", "");
+  }
+  _generateMarkup() {
+    return this._data.map(result => _previewViewJsDefault.default.render(result, false)).join("");
+  }
+}
+exports.default = new ResultsView();
+
+},{"./View.js":"48jhP","./previewView.js":"3QsRt","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"3QsRt":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+var _urlImgIconsSvg = require("url:../../img/icons.svg");
+var _urlImgIconsSvgDefault = _parcelHelpers.interopDefault(_urlImgIconsSvg);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class PreviewView extends _ViewJsDefault.default {
+  constructor(...args) {
+    super(...args);
+    _defineProperty(this, "_parentElement", "");
+  }
+  _generateMarkup() {
+    const id = window.location.hash.slice(1);
+    return `
+        <li class="preview">
+            <a class='preview__link ${this._data.id === id ? "preview__link--active" : ""}' href="#${this._data.id}">
+                <figure class="preview__fig">
+                    <img src="${this._data.image}" alt="${this._data.title}" />
+                </figure>
+                <div class="preview__data">
+                    <h4 class="preview__title">${this._data.title}</h4>
+                    <p class="preview__publisher">${this._data.publisher}</p>
+                    <div class="preview__user-generated ${this._data.key ? "" : "hidden"}">
+                      <svg>
+                        <use href="${_urlImgIconsSvgDefault.default}#icon-user"></use>
+                      </svg>
+                  </div>
+                </div>
+            </a>
+        </li>
+      `;
+  }
+}
+exports.default = new PreviewView();
+
+},{"./View.js":"48jhP","url:../../img/icons.svg":"3t5dV","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"5u5Fw":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+var _urlImgIconsSvg = require("url:../../img/icons.svg");
+var _urlImgIconsSvgDefault = _parcelHelpers.interopDefault(_urlImgIconsSvg);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+// Parcel 2
+class PaginationView extends _ViewJsDefault.default {
+  constructor(...args) {
+    super(...args);
+    _defineProperty(this, "_parentElement", document.querySelector(".pagination"));
+  }
+  addHandlerClick(handler) {
+    this._parentElement.addEventListener("click", function (e) {
+      const btn = e.target.closest(".btn--inline");
+      if (!btn) return;
+      const goToPage = +btn.dataset.goto;
+      handler(goToPage);
+    });
+  }
+  _generateMarkup() {
+    const curPage = this._data.page;
+    const numPages = Math.ceil(this._data.results.length / this._data.resultsPerPage);
+    // Page 1, and other pages
+    if (curPage === 1 && numPages > 1) {
+      return this._generateNextButton(curPage);
+    }
+    // Last page
+    if (curPage === numPages && numPages > 1) {
+      return this._generatePrevButton(curPage);
+    }
+    // Other pages
+    if (curPage > 1 && curPage < numPages) {
+      return `
+        ${this._generatePrevButton(curPage)}${this._generateNextButton(curPage)}
+    `;
+    }
+    // Page 1, and there are NO other pages
+    return "";
+  }
+  _generateNextButton(curPage) {
+    return `
+        <button data-goto="${curPage + 1}" class="btn--inline pagination__btn--next">
+            <span>Page ${curPage + 1}</span>
+            <svg class="search__icon">
+                <use href="${_urlImgIconsSvgDefault.default}#icon-arrow-right"></use>
+            </svg>
+        </button>
+    `;
+  }
+  _generatePrevButton(curPage) {
+    return `
+        <button data-goto="${curPage - 1}" class="btn--inline pagination__btn--prev">
+            <svg class="search__icon">
+                <use href="${_urlImgIconsSvgDefault.default}#icon-arrow-left"></use>
+            </svg>
+            <span>Page ${curPage - 1}</span>
+        </button>
+    `;
+  }
+}
+exports.default = new PaginationView();
+
+},{"./View.js":"48jhP","url:../../img/icons.svg":"3t5dV","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"2EbNZ":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+var _previewViewJs = require("./previewView.js");
+var _previewViewJsDefault = _parcelHelpers.interopDefault(_previewViewJs);
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+class BookmarksView extends _ViewJsDefault.default {
+  constructor(...args) {
+    super(...args);
+    _defineProperty(this, "_parentElement", document.querySelector(".bookmarks__list"));
+    _defineProperty(this, "_errorMessage", "No bookmarks yet. Find a nice recipe and bookmark it :)");
+    _defineProperty(this, "_message", "");
+  }
+  addHandlerRender(handler) {
+    window.addEventListener("load", handler);
+  }
+  _generateMarkup() {
+    return this._data.map(bookmark => _previewViewJsDefault.default.render(bookmark, false)).join("");
+  }
+}
+exports.default = new BookmarksView();
+
+},{"./View.js":"48jhP","./previewView.js":"3QsRt","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"4ieaQ":[function(require,module,exports) {
+var _parcelHelpers = require("@parcel/transformer-js/lib/esmodule-helpers.js");
+_parcelHelpers.defineInteropFlag(exports);
+var _ViewJs = require("./View.js");
+var _ViewJsDefault = _parcelHelpers.interopDefault(_ViewJs);
+require("url:../../img/icons.svg");
+function _defineProperty(obj, key, value) {
+  if ((key in obj)) {
+    Object.defineProperty(obj, key, {
+      value: value,
+      enumerable: true,
+      configurable: true,
+      writable: true
+    });
+  } else {
+    obj[key] = value;
+  }
+  return obj;
+}
+// Parcel 2
+class AddRecipeView extends _ViewJsDefault.default {
+  // Selectors
+  constructor() {
+    super();
+    _defineProperty(this, "_parentElement", document.querySelector(".upload"));
+    _defineProperty(this, "_message", "Recipe was successfully upladed :)");
+    _defineProperty(this, "_window", document.querySelector(".add-recipe-window"));
+    _defineProperty(this, "_overlay", document.querySelector(".overlay"));
+    _defineProperty(this, "_btnOpen", document.querySelector(".nav__btn--add-recipe"));
+    _defineProperty(this, "_btnClose", document.querySelector(".btn--close-modal"));
+    this.addHandlerShowWindow();
+    this.addHandlerHideWindow();
+  }
+  toggleWindow() {
+    this._overlay.classList.toggle("hidden");
+    this._window.classList.toggle("hidden");
+  }
+  addHandlerShowWindow() {
+    this._btnOpen.addEventListener("click", this.toggleWindow.bind(this));
+  }
+  addHandlerHideWindow() {
+    this._btnClose.addEventListener("click", this.toggleWindow.bind(this));
+    this._overlay.addEventListener("click", this.toggleWindow.bind(this));
+  }
+  _addHandlerUpload(handler) {
+    this._parentElement.addEventListener("submit", function (e) {
+      e.preventDefault();
+      // 1) get Form Data and deconstruct to an array
+      const dataArr = [...new FormData(this)];
+      // 2) Convert to object
+      const data = Object.fromEntries(dataArr);
+      handler(data);
+    });
+  }
+  _generateMarkup() {}
+}
+exports.default = new AddRecipeView();
+
+},{"./View.js":"48jhP","url:../../img/icons.svg":"3t5dV","@parcel/transformer-js/lib/esmodule-helpers.js":"5gA8y"}],"1PFvP":[function(require,module,exports) {
 require('../es');
 require('../web');
 var path = require('../internals/path');
